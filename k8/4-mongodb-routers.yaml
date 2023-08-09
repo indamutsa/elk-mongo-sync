@@ -1,0 +1,160 @@
+# Mongos Routers replica set 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongos1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongos1
+  template:
+    metadata:
+      labels:
+        app: mongos1
+    spec:
+      containers:
+      - name: mongos1
+        image: indamutsa/mongo:v1.0.0
+        command: 
+        - mongos
+        - --configdb
+        - mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
+        - --port
+        - "27017" 
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: config
+          mountPath: /home/app
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+      volumes:
+      - name: config
+        configMap:
+          name: mongos1-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongos1
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongos1
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongos1-config
+data:
+  addShards.js: |
+    sh.addShard("mongors1/mongors1n1:27017,mongors1n2:27017,mongors1n3:27017");
+    sh.addShard("mongors2/mongors2n1:27017,mongors2n2:27017,mongors2n3:27017");
+
+    // For testing the sharding
+    sh.enableSharding("testDb");
+    db.createCollection("kittens");
+    db.kittens.createIndex({ name: "hashed" });
+    sh.shardCollection("testDb.kittens", { name: "hashed" });
+
+    // MDEForge
+    sh.enableSharding("mdeforge");
+    db.createCollection("artifacts");
+    db.mdeforge.createIndex({ storageUrl: "hashed" });
+    sh.shardCollection("mdeforge.artifacts", { storageUrl: "hashed" });
+
+---    
+
+# Mongos Routers replica set 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongos2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongos2
+  template:
+    metadata:
+      labels:
+        app: mongos2
+    spec:
+      containers:
+      - name: mongos2
+        image: indamutsa/mongo:v1.0.0
+        command: 
+        - mongos
+        - --configdb
+        - mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017
+        - --port
+        - "27017" 
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: config
+          mountPath: /home/app
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+      volumes:
+      - name: config
+        configMap:
+          name: mongos2-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongos2
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongos2
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongos2-config
+data:
+  addShards.js: |
+    sh.addShard("mongors1/mongors1n1:27017,mongors1n2:27017,mongors1n3:27017");
+    sh.addShard("mongors2/mongors2n1:27017,mongors2n2:27017,mongors2n3:27017");
+
+    // For testing the sharding
+    sh.enableSharding("testDb");
+    db.createCollection("kittens");
+    db.kittens.createIndex({ name: "hashed" });
+    sh.shardCollection("testDb.kittens", { name: "hashed" });
+
+    // MDEForge
+    sh.enableSharding("mdeforge");
+    db.createCollection("artifacts");
+    db.mdeforge.createIndex({ storageUrl: "hashed" });
+    sh.shardCollection("mdeforge.artifacts", { storageUrl: "hashed" });
+

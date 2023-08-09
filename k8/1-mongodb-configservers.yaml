@@ -1,0 +1,177 @@
+# Config server replica set 1
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongocfg1
+  labels:
+    app: mongocfg1
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongocfg1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongocfg1
+spec:
+  serviceName: "mongocfg1"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongocfg1
+  template:
+    metadata:
+      labels:
+        app: mongocfg1
+    spec:
+      containers:
+      - name: mongocfg1
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --configsvr
+        - --replSet
+        - mongors1conf
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-config-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-config-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+
+# Config server replica set 2
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongocfg2
+  labels:
+    app: mongocfg2
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongocfg2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongocfg2
+spec:
+  serviceName: "mongocfg2"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongocfg2
+  template:
+    metadata:
+      labels:
+        app: mongocfg2
+    spec:
+      containers:
+      - name: mongocfg2
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --configsvr
+        - --replSet
+        - mongors1conf
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-config-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-config-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Config server replica set 3
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongocfg3
+  labels:
+    app: mongocfg3
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongocfg3
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongocfg3
+spec:
+  serviceName: "mongocfg3"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongocfg3
+  template:
+    metadata:
+      labels:
+        app: mongocfg3
+    spec:
+      containers:
+      - name: mongocfg3
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --configsvr
+        - --replSet
+        - mongors1conf
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-config-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-config-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

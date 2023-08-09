@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monstache-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monstache
+  template:
+    metadata:
+      labels:
+        app: monstache
+    spec:
+      containers:
+      - name: monstache
+        image: indamutsa/monstache:v1.0.0
+        args: 
+        - "-f"
+        - "/app/monstache.config.toml"
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 1
+          periodSeconds: 1
+          timeoutSeconds: 30
+          failureThreshold: 300
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: monstache
+spec:
+  selector:
+    app: monstache
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+

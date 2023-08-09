@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: setup-rs
+spec:
+  template:
+    metadata:
+      labels:
+        job-name: setup-rs
+    spec:
+      containers:
+      - name: setup-rs
+        image: indamutsa/setup-rs:v1.0.4
+        # command:
+        # - /bin/sh
+        # - -c
+        # - |
+        #   #!/bin/sh
+        #   start_time=$(date +%s)
+        #   while true; do
+        #     current_time=$(date +%s)
+        #     duration=$((current_time - start_time))
+            
+        #     # Exit after 180 seconds (3 minutes)
+        #     if [ $duration -ge 180 ]; then
+        #       echo "Timeout reached!"
+        #       exit 1
+        #     fi
+
+        #     # Check connectivity to the services
+        #     if mongo mongodb://mongos1:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongos2:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongocfg1:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongocfg2:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongocfg3:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors1n1:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors1n2:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors1n3:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors2n1:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors2n2:27017/ --eval "db.adminCommand('ping')" &&
+        #        mongo mongodb://mongors2n3:27017/ --eval "db.adminCommand('ping')";
+
+        #     then
+        #       echo "All services are reachable!"
+        #       # Place additional setup tasks here if needed
+              
+        #       exit 0
+        #     else
+        #       echo "Waiting for all services to be reachable..."
+        #       sleep 10
+        #     fi
+        #   done
+      restartPolicy: Never

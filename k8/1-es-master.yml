@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es-master
+spec:
+  serviceName: es-master
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es-master
+  template:
+    metadata:
+      labels:
+        app: es-master
+    spec:
+      containers:
+      - name: es-master
+        image: indamutsa/elasticsearch:v1.0.0
+
+        env:
+        - name: node.name
+          value: "es-master"
+        - name: node.master
+          value: "true"
+        - name: node.data
+          value: "false"
+        - name: cluster.initial_master_nodes
+          value: "es-master,es-worker1,es-worker2"  # <-- Add all nodes here
+        - name: ES_JAVA_OPTS
+          value: "-Xmx256m -Xms256m"
+        - name: ELASTICSEARCH_URL
+          value: "http://es-master:9200"          
+        - name: ELASTIC_USERNAME
+          value: elastic
+        - name: ELASTIC_PASSWORD
+          value: changeme
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        volumeMounts:
+        - name: es-master-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: es-master-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: es-master
+spec:
+  selector:
+    app: es-master
+  ports:
+    - protocol: TCP
+      port: 9200
+      targetPort: 9200
+      name: http-port
+    - protocol: TCP
+      port: 9300
+      targetPort: 9300
+      name: transport-port
+  type: ClusterIP
+
+
+

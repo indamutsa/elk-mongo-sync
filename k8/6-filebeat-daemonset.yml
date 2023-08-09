@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+spec:
+  selector:
+    matchLabels:
+      app: filebeat
+  template:
+    metadata:
+      labels:
+        app: filebeat
+    spec:
+      containers:
+      - name: filebeat
+        image: indamutsa/filebeat:v1.0.0
+        volumeMounts:
+        - mountPath: /var/log
+          name: system-logs
+          readOnly: true
+      volumes:
+      - name: system-logs
+        hostPath:
+          path: /var/log
+      terminationGracePeriodSeconds: 30
+

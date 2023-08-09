@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: indamutsa/logstash:v1.0.0
+        env:
+        - name: ELASTICSEARCH_URL
+          value: "http://es-master:9200"  # Adjust if needed
+        ports:
+        - containerPort: 5044
+        - containerPort: 5000
+        - containerPort: 9600
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+spec:
+  selector:
+    app: logstash
+  ports:
+    - name: logstash-tcp-5044
+      protocol: TCP
+      port: 5044
+      targetPort: 5044
+    - name: logstash-tcp-5000
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+    - name: logstash-tcp-9600
+      protocol: TCP
+      port: 9600
+      targetPort: 9600
+  type: ClusterIP
+

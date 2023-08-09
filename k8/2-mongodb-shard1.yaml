@@ -1,0 +1,178 @@
+# Replica Set 1
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongors1n1
+  labels:
+    app: mongors1n1
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongors1n1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongors1n1
+spec:
+  serviceName: "mongors1n1"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongors1n1
+  template:
+    metadata:
+      labels:
+        app: mongors1n1
+    spec:
+      containers:
+      - name: mongors1n1
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --shardsvr
+        - --replSet
+        - mongors1
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+# Replica 2          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongors1n2
+  labels:
+    app: mongors1n2
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongors1n2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongors1n2
+spec:
+  serviceName: "mongors1n2"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongors1n2
+  template:
+    metadata:
+      labels:
+        app: mongors1n2
+    spec:
+      containers:
+      - name: mongors1n2
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --shardsvr
+        - --replSet
+        - mongors1
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+       
+---
+# Replica Set 3  
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongors1n3
+  labels:
+    app: mongors1n3
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongors1n3
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongors1n3
+spec:
+  serviceName: "mongors1n3"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongors1n3
+  template:
+    metadata:
+      labels:
+        app: mongors1n3
+    spec:
+      containers:
+      - name: mongors1n3
+        image: indamutsa/mongo:v1.0.0
+        command:
+        - mongod
+        - --shardsvr
+        - --replSet
+        - mongors1
+        - --dbpath
+        - /data/db
+        - --port
+        - "27017"
+        - --bind_ip_all
+        ports:
+        - containerPort: 27017
+        env:
+        - name: TERM
+          value: xterm
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+

@@ -1,0 +1,328 @@
+# In this cluster of microservices, we define elastastic as engine and its logging and visualization supporting tools (logstash, kibana and filebeat)
+# In the second part, we synchronize our search engine with the persistence api
+
+# The next thing is to define a crawler that go through files asynchronsously and extracts keywords and index it as well (save it db)
+# Then build the complete search api
+
+version: "3.4"
+
+services:
+  # Mongo cluster  -- Sharded cluster
+  #################################################
+
+  # Shard 1
+  mongors1n1:
+    container_name: mongors1n1
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27018:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data1:/data/db
+    networks:
+      - search-engine
+
+  mongors1n2:
+    container_name: mongors1n2
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27027:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data2:/data/db
+    networks:
+      - search-engine
+
+  mongors1n3:
+    container_name: mongors1n3
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27037:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data3:/data/db
+    networks:
+      - search-engine
+
+  # Shard 2
+  mongors2n1:
+    container_name: mongors2n1
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27047:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data4:/data/db
+    networks:
+      - search-engine
+
+  mongors2n2:
+    container_name: mongors2n2
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27057:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data5:/data/db
+    networks:
+      - search-engine
+
+  mongors2n3:
+    container_name: mongors2n3
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27017 --bind_ip_all
+    ports:
+      - 27067:27017
+    expose:
+      - "27017"
+    environment:
+      TERM: xterm
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/data6:/data/db
+    networks:
+      - search-engine
+
+  # Configuration server
+  mongocfg1:
+    container_name: mongocfg1
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017 --bind_ip_all
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/config1:/data/db
+    networks:
+      - search-engine
+
+  mongocfg2:
+    container_name: mongocfg2
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017 --bind_ip_all
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/config2:/data/db
+    networks:
+      - search-engine
+
+  mongocfg3:
+    container_name: mongocfg3
+    image: indamutsa/mongo:v1.0.0
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27017 --bind_ip_all
+    environment:
+      TERM: xterm
+    expose:
+      - "27017"
+    volumes:
+      - ./mongo-bundle/sharded/mongo_cluster/config3:/data/db
+    networks:
+      - search-engine
+
+  # The router
+  mongos1:
+    container_name: mongos1
+    image: indamutsa/mongo:v1.0.0
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 --port 27017 --bind_ip_all
+    ports:
+      - 27019:27017
+    expose:
+      - "27017"
+    volumes:
+      - ./setup/addShards.js:/home/app/addShards.js
+    networks:
+      - search-engine
+
+  mongos2:
+    container_name: mongos2
+    image: indamutsa/mongo:v1.0.0
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27017,mongocfg2:27017,mongocfg3:27017 --port 27017 --bind_ip_all
+    ports:
+      - 27020:27017
+    expose:
+      - "27017"
+    networks:
+      - search-engine
+
+  # A shortlived container for starting the cluster
+  setup-rs:
+    container_name: setup-rs
+    image: indamutsa/setup-rs:v1.0.4
+    # build: ./setup
+    depends_on:
+      - "mongos1"
+    networks:
+      - search-engine
+
+  # ---------------------------------------------------------------------------
+  # ELASTICSEARCH CLUSTER
+  ################################################################################
+  es-master:
+    container_name: es-master
+    # build:
+    #   context: ./elasticsearch
+    #   dockerfile: Dockerfile
+    image: indamutsa/elasticsearch:v1.0.0
+    environment:
+      - node.name=es-master
+      - node.master=true
+      - node.data=false
+      - cluster.initial_master_nodes=es-master
+      - ES_JAVA_OPTS=-Xmx256m -Xms256m
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=changeme
+    volumes:
+      - es-master-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - search-engine
+
+  es-worker1:
+    container_name: es-worker1
+    # build:
+    #   context: ./elasticsearch
+    #   dockerfile: Dockerfile
+    image: indamutsa/elasticsearch:v1.0.0
+    environment:
+      - node.name=es-worker1
+      - node.master=false
+      - node.data=true
+      - discovery.seed_hosts=es-master
+      - ES_JAVA_OPTS=-Xmx256m -Xms256m
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=changeme
+    volumes:
+      - es-worker1-data:/usr/share/elasticsearch/data
+    networks:
+      - search-engine
+    depends_on:
+      - es-master
+
+  es-worker2:
+    container_name: es-worker2
+    # build:
+    #   context: ./elasticsearch
+    #   dockerfile: Dockerfile
+    image: indamutsa/elasticsearch:v1.0.0
+    environment:
+      - node.name=es-worker2
+      - node.master=false
+      - node.data=true
+      - node.ingest=true
+      - discovery.seed_hosts=es-master
+      - ES_JAVA_OPTS=-Xmx256m -Xms256m
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=changeme
+    volumes:
+      - es-worker2-data:/usr/share/elasticsearch/data
+    networks:
+      - search-engine
+    depends_on:
+      - es-master
+
+  logstash:
+    container_name: logstash
+    # build:
+    #   context: ./logstash
+    #   dockerfile: Dockerfile
+    image: indamutsa/logstash:v1.0.0
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    networks:
+      - search-engine
+    depends_on:
+      - es-master
+    restart: on-failure
+
+  kibana:
+    container_name: kibana
+    # build:
+    #   context: ./kibana
+    #   dockerfile: Dockerfile
+    image: indamutsa/kibana:v1.0.0
+    ports:
+      - "5601:5601"
+    networks:
+      - search-engine
+    depends_on:
+      - es-master
+    restart: on-failure
+
+  filebeat:
+    container_name: filebeat
+    # build:
+    #   context: ./filebeat
+    #   dockerfile: Dockerfile
+    image: indamutsa/filebeat:v1.0.0
+    volumes:
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - search-engine
+    restart: on-failure
+
+  # Synchronizing the elasticsearch and mongo cluster using MONSTACHE
+  ###################################################################
+  monstache:
+    image: indamutsa/monstache:v1.0.0
+    container_name: monstache
+    working_dir: /app
+    command: -f monstache.config.toml
+
+    ports:
+      - "8080:8080"
+    networks:
+      - search-engine
+    healthcheck:
+      # test: "wget -q -O - http://localhost:8080/healthz"
+      test: "wget -q -O - http://monstache:8080/healthz"
+      interval: 1s
+      timeout: 30s
+      retries: 300
+    # restart: unless-stopped
+    restart: on-failure
+
+# Defining the network
+######################################################
+networks:
+  search-engine:
+    external: false
+
+volumes:
+  es-master-data:
+  es-worker1-data:
+  es-worker2-data:
+  elasticsearch:

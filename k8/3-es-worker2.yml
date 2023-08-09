@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es-worker2
+spec:
+  serviceName: es-worker2
+  replicas: 1
+  selector:
+    matchLabels:
+      app: es-worker2
+  template:
+    metadata:
+      labels:
+        app: es-worker2
+    spec:
+      containers:
+      - name: es-worker2
+        image: indamutsa/elasticsearch:v1.0.0
+
+        env:
+        - name: node.name
+          value: "es-worker2"
+        - name: node.master
+          value: "true"    # <-- Change this to true
+        - name: node.data
+          value: "true"
+        - name: discovery.seed_hosts
+          value: "es-master,es-worker1,es-worker2"   # <-- Add all nodes here
+        - name: node.ingest
+          value: "true"
+        - name: ES_JAVA_OPTS
+          value: "-Xmx256m -Xms256m"
+        - name: ELASTICSEARCH_URL
+          value: "http://es-worker2:9200"          
+        - name: ELASTIC_USERNAME
+          value: elastic
+        - name: ELASTIC_PASSWORD
+          value: changeme
+        ports:
+        - containerPort: 9200
+        - containerPort: 9300
+        volumeMounts:
+        - name: es-worker2-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: es-worker2-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: es-worker2
+spec:
+  selector:
+    app: es-worker2
+  ports:
+    - protocol: TCP
+      port: 9200
+      targetPort: 9200
+      name: http-port
+    - protocol: TCP
+      port: 9300
+      targetPort: 9300
+      name: transport-port
+  type: ClusterIP
+
+  
