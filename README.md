@@ -1,2 +1,1 @@
-# elk-mongo-sync
-Elasticsearch and mongodb in real-time sync for different purposes...
+
