@@ -25,6 +25,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data1:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongors1n2:
     container_name: mongors1n2
@@ -40,6 +41,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data2:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongors1n3:
     container_name: mongors1n3
@@ -55,6 +57,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data3:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   # Shard 2
   mongors2n1:
@@ -71,6 +74,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data4:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongors2n2:
     container_name: mongors2n2
@@ -86,6 +90,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data5:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongors2n3:
     container_name: mongors2n3
@@ -101,6 +106,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/data6:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   # Configuration server
   mongocfg1:
@@ -115,6 +121,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/config1:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongocfg2:
     container_name: mongocfg2
@@ -128,6 +135,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/config2:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   mongocfg3:
     container_name: mongocfg3
@@ -141,6 +149,7 @@ services:
       - ./mongo-bundle/sharded/mongo_cluster/config3:/data/db
     networks:
       - search-engine
+    restart: on-failure
 
   # The router
   mongos1:
@@ -158,6 +167,7 @@ services:
       - ./setup/addShards.js:/home/app/addShards.js
     networks:
       - search-engine
+    restart: on-failure
 
   mongos2:
     container_name: mongos2
@@ -172,16 +182,18 @@ services:
       - "27017"
     networks:
       - search-engine
+    restart: on-failure
 
   # A shortlived container for starting the cluster
   setup-rs:
     container_name: setup-rs
-    image: indamutsa/setup-rs:v1.0.4
+    image: indamutsa/setup-rs:v1.0.5
     # build: ./setup
     depends_on:
       - "mongos1"
     networks:
       - search-engine
+    restart: on-failure
 
   # ---------------------------------------------------------------------------
   # ELASTICSEARCH CLUSTER
@@ -206,6 +218,7 @@ services:
       - 9200:9200
     networks:
       - search-engine
+    restart: on-failure
 
   es-worker1:
     container_name: es-worker1
@@ -227,6 +240,7 @@ services:
       - search-engine
     depends_on:
       - es-master
+    restart: on-failure
 
   es-worker2:
     container_name: es-worker2
@@ -249,6 +263,7 @@ services:
       - search-engine
     depends_on:
       - es-master
+    restart: on-failure
 
   logstash:
     container_name: logstash
